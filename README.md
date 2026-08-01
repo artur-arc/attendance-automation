@@ -1,6 +1,8 @@
 # Attendance automation
 
-Fills your unreported days on the Priority Connect portal — every Friday night, by itself, for free.
+Fills your unreported days on the
+[Priority Connect portal](https://p.priority-connect.online/attendance/portal/PP001#/login) — every
+Friday night, by itself, for free.
 
 You do not need to be a programmer. Fork the project, paste in your portal login, press one button.
 Twenty minutes once, and then you can forget about it.
