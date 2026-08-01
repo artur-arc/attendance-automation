@@ -1,0 +1,21 @@
+name: Attendance Automation
+on:
+  schedule:
+    - cron: '30 21 * * 4' # Every Friday at 00:30 Asia/Jerusalem (Thu 21:30 UTC)
+  workflow_dispatch:
+
+jobs:
+  run-automation:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.0-jammy # Matches local package version
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npm run attendance
+        env:
+          ATTENDANCE_LOGIN_USERNAME: ${{ secrets.ATTENDANCE_LOGIN_USERNAME }}
+          ATTENDANCE_LOGIN_PASSWORD: ${{ secrets.ATTENDANCE_LOGIN_PASSWORD }}

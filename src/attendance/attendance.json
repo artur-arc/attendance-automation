@@ -1,0 +1,22 @@
+{
+  "automation": {
+    "time": "00:30",
+    "timezone": "Asia/Jerusalem",
+    "dayOfWeek": 5
+  },
+  "baseUrl": "https://p.priority-connect.online/attendance/portal/PP001#/attendance",
+  "defaults": {
+    "inTime": "09:00",
+    "outTime": "18:00"
+  },
+  "sweepMonthsBack": 1,
+  "schedule": {
+    "sun": "home",
+    "mon": "home",
+    "tue": "home",
+    "wed": "home",
+    "thu": "home",
+    "fri": "off",
+    "sat": "off"
+  }
+}

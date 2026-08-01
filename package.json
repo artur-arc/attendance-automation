@@ -1,0 +1,26 @@
+{
+  "name": "attendance-automation",
+  "version": "1.0.0",
+  "description": "Fills unfilled attendance days on the Priority portal with Playwright",
+  "author": "Artur Polishchuk",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "attendance": "tsx src/attendance/run.ts",
+    "attendance:dry": "tsx src/attendance/dry-run.ts",
+    "sync-schedule": "tsx src/utils/sync-schedule.ts src/attendance/attendance.json .github/workflows/attendance.yml",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.59.0",
+    "playwright": "^1.59.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "dotenv": "^17.3.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
+}

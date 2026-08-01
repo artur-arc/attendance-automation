@@ -1,0 +1,12 @@
+[extend]
+useDefault = true
+
+# Playwright page objects declare SelectorSpec entries whose `key` is a dotted
+# identifier (e.g. `key: '1301.income.calculate'`). The generic-api-key rule
+# reads any `key: '<string>'` as a credential; these are selector names, not
+# secrets. Kept narrow: lowercase/digit segments joined by dots only.
+[[allowlists]]
+description = "SelectorSpec keys in Playwright page objects"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+regexes = ['''^\s*key:\s*'[a-z0-9]+(\.[a-z0-9]+)+',?\s*$''']
