@@ -1,0 +1,230 @@
+{
+  "$schema": "./node_modules/pr-checkmate/pr-checkmate.schema.json",
+  "commands": {
+    "npx pr-checkmate init": "Update pr-checkmate.json",
+    "npx pr-checkmate all": "Run all checks (the PR diff in CI, every tracked file locally)",
+    "npx pr-checkmate all --full": "Run all checks over every tracked file, CI included",
+    "npx pr-checkmate lint": "Lint code using ESLint",
+    "npx pr-checkmate prettier": "Format code using Prettier",
+    "npx pr-checkmate deps": "Check project dependencies",
+    "npx pr-checkmate npm-audit": "Run package vulnerabilities check",
+    "npx pr-checkmate security": "Security scan",
+    "npx pr-checkmate spellcheck": "Run spellcheck via cspell",
+    "npx pr-checkmate typecheck": "TypeScript type check (tsc --noEmit)",
+    "npx pr-checkmate diff-smell": "Scan git diff for code smells",
+    "npx pr-checkmate pr-body": "Validate PR description",
+    "npx pr-checkmate duplicate": "Detect duplicate code blocks (jscpd)"
+  },
+  "// reporting": "Results post to the PR/MR automatically. GitHub: no setup — the runner injects GITHUB_TOKEN; just keep `permissions: pull-requests: write` in the workflow. GitLab: create a token (Project → Settings → Access Tokens, scope `api`) and add it as CI/CD variable GITLAB_TOKEN. Bitbucket: create a token (Repo → Settings → Access tokens, scope pull-requests:write) and add it as repo variable BITBUCKET_TOKEN. The token lives in YOUR CI variables, never in this file. Without it, checks still run and print to the log — only the comment is skipped.",
+  "sourcePath": ".",
+  "ignoreDirs": [
+    ".git",
+    ".github",
+    ".gitlab",
+    ".vscode",
+    ".vs",
+    ".idea",
+    ".claude",
+    ".cursor",
+    ".husky",
+    ".circleci",
+    "node_modules",
+    "dist",
+    "build",
+    "build-release",
+    "out",
+    "coverage",
+    ".next",
+    ".nuxt",
+    ".svelte-kit",
+    ".turbo",
+    ".cache",
+    ".parcel-cache",
+    ".vercel",
+    ".wrangler",
+    ".serverless",
+    ".terraform",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "venv",
+    ".eggs",
+    "htmlcov",
+    ".gradle",
+    ".kotlin",
+    "target",
+    "gen",
+    "captures",
+    ".build",
+    ".swiftpm",
+    "DerivedData",
+    "Pods",
+    "Carthage",
+    "CMakeFiles",
+    "cmake-build-debug",
+    "cmake-build-release",
+    "_deps",
+    "reports",
+    "report",
+    "test-reports",
+    "test-report",
+    "test-output",
+    "test-results",
+    "results",
+    "result",
+    "logs",
+    "allure-report",
+    "allure-results",
+    "playwright-report",
+    ".wdio"
+  ],
+  "eslint": {
+    "rules": {
+      "max-len": ["warn", { "code": 200 }]
+    },
+    "ignorePatterns": []
+  },
+  "prettier": {
+    "rules": {}
+  },
+  "cspell": {
+    "enabled": true,
+    "words": ["neighbouring"],
+    "ignorePaths": [],
+    "ignoreRegExpList": []
+  },
+  "markdownlint": {
+    "rules": {},
+    "ignores": []
+  },
+  "yamlLint": {
+    "enabled": true,
+    "ignore": []
+  },
+  "typecheck": {
+    "enabled": true
+  },
+  "diffSmell": {
+    "enabled": true
+  },
+  "prBody": {
+    "enabled": true,
+    "minLength": 20,
+    "requireTicket": true
+  },
+  "duplicate": {
+    "enabled": true,
+    "minLines": 5,
+    "minTokens": 50,
+    "ignore": [
+      "**/__tests__/**",
+      "**/__mocks__/**",
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/test/**",
+      "**/tests/**"
+    ],
+    "formats": ["javascript", "typescript", "jsx", "tsx", "python", "kotlin", "swift", "c", "cpp"]
+  },
+  "dependency": {
+    "enabled": true,
+    "ignore": []
+  },
+  "circularDeps": {
+    "enabled": true,
+    "severity": "warn",
+    "ignore": [],
+    "timeoutMs": 120000
+  },
+  "deadCode": {
+    "enabled": true,
+    "ignoreFiles": [
+      "/__tests__/",
+      "/__mocks__/",
+      "/__mock__/",
+      "/tests?/",
+      "\\.test\\.",
+      "\\.spec\\."
+    ]
+  },
+  "customRules": [],
+  "severity": {},
+  "mergeConflict": {
+    "enabled": true
+  },
+  "leftoverDebug": {
+    "enabled": true
+  },
+  "lockfileDrift": {
+    "enabled": true
+  },
+  "largeFiles": {
+    "enabled": true,
+    "maxSizeKb": 500,
+    "allow": []
+  },
+  "missingTests": {
+    "enabled": true
+  },
+  "todoFixme": {
+    "enabled": true,
+    "requireTicket": false
+  },
+  "migrationSafety": {
+    "enabled": true
+  },
+  "diffSecurity": {
+    "enabled": true
+  },
+  "sensitiveFileGuard": {
+    "enabled": true
+  },
+  "workflowSecurity": {
+    "enabled": true
+  },
+  "dockerfileSecurity": {
+    "enabled": true
+  },
+  "caseCollision": {
+    "enabled": true
+  },
+  "vulnScan": {
+    "enabled": false
+  },
+  "grypeScan": {
+    "enabled": true,
+    "minSeverity": "medium",
+    "timeoutMs": 120000
+  },
+  "coverage": {
+    "enabled": false
+  },
+  "prSize": {
+    "enabled": true,
+    "maxFiles": 50,
+    "maxLines": 1000
+  },
+  "commitlint": {
+    "enabled": true
+  },
+  "bannedImports": [],
+  "licenseHeader": {
+    "enabled": false,
+    "pattern": "",
+    "lines": 10
+  },
+  "outdatedDeps": {
+    "enabled": true,
+    "ignore": []
+  },
+  "documentation": {
+    "eslint": "https://eslint.org/docs/latest/rules/",
+    "typescriptEslint": "https://typescript-eslint.io/rules/",
+    "prettier": "https://prettier.io/docs/en/options.html",
+    "cspell": "https://cspell.org/configuration/"
+  },
+  "languages": ["typescript", "javascript"]
+}
