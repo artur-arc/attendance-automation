@@ -200,8 +200,3 @@ npm run telegram:chat-id  # prints the channel ids your bot can see
 A browser window opens and drives itself — that is normal, and closing it stops the run. Start with the dry
 run: it walks the exact same path as the real one and writes nothing, which makes it the safe way to check
 a schedule change.
-
-## Under the hood
-
-The portal has some genuinely strange behaviour, and the code carries a fair amount of scar tissue because
-of it. If you are curious or need to fix something: [docs/how-it-works.md](docs/how-it-works.md).
