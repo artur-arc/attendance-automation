@@ -12,7 +12,14 @@ name: PR CheckMate
 # The image is pulled once and cached by the runner, and the tag below pins the
 # major so nothing moves under you.
 
+# Two entrances, because a pull request is not the only way code lands here.
+# Commits go straight to `main` in this repository, and a gate that only watches
+# pull requests watches nothing. On a push there is no PR to build a diff range
+# against, so the run scans the whole tree instead of the change — slower, and
+# the summary goes to the log rather than to a comment.
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main, master, develop]
     types: [opened, synchronize, reopened]
@@ -26,7 +33,8 @@ permissions:
 # Push three times in a minute and the first two runs become answers to questions
 # nobody is asking any more — they still hold a runner, and they still race to
 # upsert the summary comment, so a stale verdict can land on top of a fresh one.
-# Keyed per PR, so runs on different pull requests never cancel each other.
+# Keyed per ref, so pull requests never cancel each other and a burst of commits
+# on `main` leaves only the newest tree under review.
 concurrency:
   group: pr-checkmate-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
