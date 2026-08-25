@@ -21,7 +21,7 @@
     "@types/node": "^26.1.0",
     "dotenv": "^17.3.1",
     "tsx": "^4.21.0",
-    "pr-checkmate": "^1.23.21",
+    "pr-checkmate": "3.0.2",
     "typescript": "^6.0.2"
   }
 }
