@@ -131,5 +131,14 @@ src/
 .github/workflows/attendance.yml
 ```
 
-The environment needs Node 20 and Playwright 1.59 to match the container the workflow runs in
-(`mcr.microsoft.com/playwright:v1.59.0-jammy`).
+## Playwright and the container image
+
+The environment needs Node 20 and Playwright 1.62.1 to match the container the workflow runs in
+(`mcr.microsoft.com/playwright:v1.62.1-jammy`). Those two versions move together: bumping the Playwright
+version in `package.json` without bumping the image tag in `.github/workflows/attendance.yml`, or the other
+way round, breaks the scheduled run. Both `playwright` and `@playwright/test` are pinned to exact versions
+rather than caret ranges, so a stray `npm install` cannot drift them apart, and CI runs `npm ci` so it
+installs exactly what the lockfile says.
+
+A mismatch reads `browserType.launch: Executable doesn't exist at /ms-playwright/`. The message names both
+the version it found and the image tag it needs, so the fix is to bump both to the same version.
