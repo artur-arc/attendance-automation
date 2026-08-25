@@ -1,11 +1,11 @@
 {
-    "schema_version": 2,
-    "commit": "714d3abfa113304c350e06a8547a769b8212a721",
-    "indexed_at": "2026-08-25T08:43:50Z",
-    "project": "Users-artur-Projects-attendance-automation",
-    "nodes": 395,
-    "edges": 720,
-    "original_size": 2883584,
-    "compressed_size": 430206,
-    "compression_level": 3
+  "schema_version": 2,
+  "commit": "9ee56aebae2a9c2b7bcb52d55c6091e08a8aff40",
+  "indexed_at": "2026-08-25T08:45:39Z",
+  "project": "Users-artur-Projects-attendance-automation",
+  "nodes": 397,
+  "edges": 731,
+  "original_size": 2883584,
+  "compressed_size": 428905,
+  "compression_level": 3
 }
