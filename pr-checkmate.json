@@ -92,7 +92,7 @@
   },
   "cspell": {
     "enabled": true,
-    "words": ["neighbouring"],
+    "words": ["neighbouring", "newbot", "unredacted"],
     "ignorePaths": [],
     "ignoreRegExpList": []
   },
@@ -108,7 +108,8 @@
     "enabled": true
   },
   "diffSmell": {
-    "enabled": true
+    "enabled": true,
+    "ignorePaths": ["src/utils/logger.ts"]
   },
   "prBody": {
     "enabled": true,
@@ -218,7 +219,7 @@
   },
   "outdatedDeps": {
     "enabled": true,
-    "ignore": []
+    "ignore": ["typescript"]
   },
   "documentation": {
     "eslint": "https://eslint.org/docs/latest/rules/",

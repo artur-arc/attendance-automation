@@ -1,2 +1,6 @@
 ATTENDANCE_LOGIN_USERNAME=
 ATTENDANCE_LOGIN_PASSWORD=
+
+# Optional — a run report in Telegram. Both are needed, or nothing is sent.
+BOT_TOKEN=
+TELEGRAM_CHAT_ID=

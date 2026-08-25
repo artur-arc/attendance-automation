@@ -13,7 +13,7 @@ const selectorHealer = new SelectorHealer();
  * Every shared action below accepts both, so simple sites stay terse and
  * fragile ones opt into healing without a different API.
  */
-export type Target = string | SelectorSpec;
+type Target = string | SelectorSpec;
 
 /**
  * The single base class every site's page objects extend. It owns the

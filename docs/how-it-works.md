@@ -12,6 +12,11 @@ Technical notes for whoever maintains this. For setup and daily use see the [REA
 5. For each pink day, looks up the weekday in `attendance.json` to get the place.
 6. Fills `inTime`/`outTime` from `defaults`, sets remarks to `"office"` if the place is `office`, leaves
    remarks empty for `home`, skips `off` entirely.
+7. Closes the browser, then posts the outcome to Telegram if a bot token and chat id are set.
+
+That weekday lookup lives in `src/attendance/schedule.ts`, and the dry run (`npm run attendance:dry`)
+resolves days through the same functions the real run does, so what the preview prints cannot drift from
+what a real run would write.
 
 ## Why it walks backwards
 
@@ -94,6 +99,13 @@ Required — locally in `.env`, in CI as GitHub Secrets:
 | `ATTENDANCE_LOGIN_USERNAME` | Portal login username |
 | `ATTENDANCE_LOGIN_PASSWORD` | Portal login password |
 
+Optional, for the run report. Both must be set or nothing is sent:
+
+| Variable                           | Description                                                              |
+| :--------------------------------- | :----------------------------------------------------------------------- |
+| `BOT_TOKEN` / `TELEGRAM_BOT_TOKEN` | Bot token from BotFather                                                 |
+| `TELEGRAM_CHAT_ID` / `CHAT_ID`     | Target chat, `-100…` for a channel — `npm run telegram:chat-id` finds it |
+
 Optional, for the selector layer:
 
 | Variable                       | Description                                                       |
@@ -102,6 +114,29 @@ Optional, for the selector layer:
 | `SELECTOR_CACHE_PATH`          | Where healed selectors are stored, default `.selector-cache.json` |
 | `SELECTOR_HEAL_MODEL`          | Model used by the healer                                          |
 | `SELECTOR_HEAL_MIN_CONFIDENCE` | Below this, a healed selector is discarded, default `0.5`         |
+
+## The run report
+
+`report.ts` formats a finished run, `utils/telegram.ts` delivers it. They are split because the wording
+changes far more often than the HTTP call, and because delivery has one rule the formatting does not care
+about: it can fail without failing the run. No token, no chat id, a Telegram outage, a bot kicked from the
+channel — all of it is a warning in the log and nothing more. A reporting layer that can break the thing it
+reports on is worse than no reporting.
+
+Two details are not cosmetic. Any error text is escaped before it reaches Telegram's HTML parse mode, and a
+message over 4096 characters is trimmed on a line boundary — a cut through a tag comes back as
+"can't parse entities", which loses the whole report over its tail. And nothing coming out of a failed
+request is logged raw: the bot token sits in the request URL, so an unredacted error message is a leaked
+secret in a public log.
+
+The script reports its own crashes, so the workflow's `if: failure()` step exists only for the failures it
+never sees — a container that will not start, a cancelled or timed-out job, where silence is
+indistinguishable from a run that never happened. To keep those two from both firing, a delivered report
+leaves a `.telegram-notified` file behind and the workflow step returns early when it finds one.
+
+`npm run telegram:chat-id` prints the chats the bot can currently see. It exists because a channel invite
+link cannot be turned into the numeric id `sendMessage` needs — the bot has to be an admin in the channel
+and see one message posted there before the id appears anywhere.
 
 ## Module structure
 
@@ -112,9 +147,11 @@ src/
     run.ts                ← entry point
     dry-run.ts            ← read-only dry run
     AttendanceService.ts  ← core logic
+    schedule.ts           ← day-cell class → scheduled place, used by both runs
     pages/
       LoginPage.ts
       AttendancePage.ts
+    report.ts             ← formats a run as the Telegram message
     types/index.ts        ← types, day/place constants, month aliases
   core/
     AutomationRunner.ts   ← browser lifecycle
@@ -125,7 +162,11 @@ src/
     dom-types.ts          ← DOM shapes used inside page.evaluate
   utils/
     logger.ts
+    credentials.ts        ← portal login from the environment
+    telegram.ts           ← sends one message, never throws
+    telegram-chat-id.ts   ← prints chat ids the bot can see
     cron.ts               ← timeToCron(time, timezone, dayOfWeek)
+    credentials.ts        ← requireCredentials(), reads the login env vars
     sync-schedule.ts      ← updates workflow cron from attendance.json
     index.ts
 .github/workflows/attendance.yml
@@ -136,9 +177,23 @@ src/
 The environment needs Node 20 and Playwright 1.62.1 to match the container the workflow runs in
 (`mcr.microsoft.com/playwright:v1.62.1-jammy`). Those two versions move together: bumping the Playwright
 version in `package.json` without bumping the image tag in `.github/workflows/attendance.yml`, or the other
-way round, breaks the scheduled run. Both `playwright` and `@playwright/test` are pinned to exact versions
-rather than caret ranges, so a stray `npm install` cannot drift them apart, and CI runs `npm ci` so it
-installs exactly what the lockfile says.
+way round, breaks the scheduled run. `@playwright/test` is the only direct dependency and it is pinned
+to an exact version rather than a caret range; `playwright` itself comes in transitively at that same exact
+version. So a stray `npm install` cannot drift them apart, and CI runs `npm ci` so it installs exactly what
+the lockfile says.
 
 A mismatch reads `browserType.launch: Executable doesn't exist at /ms-playwright/`. The message names both
 the version it found and the image tag it needs, so the fix is to bump both to the same version.
+
+## Toolchain constraints
+
+`typescript` is held at `^6.0.2` on purpose. TypeScript 7.0.2 was tried and reverted:
+`@typescript-eslint/typescript-estree` crashes on it with `TypeError: Cannot read properties of undefined
+(reading 'Intrinsic')`, which takes ESLint out, and `ts-unused-exports` stops producing parseable output,
+which takes the dead-code check out. `tsc --noEmit` itself was fine. That is why `typescript` sits in
+`outdatedDeps.ignore` in `pr-checkmate.json` — a deliberate hold-back, not an oversight, and one to remove
+once `@typescript-eslint` supports TS 7.
+
+Both workflows pin `actions/checkout` and `actions/setup-node` to full commit SHAs with the version in a
+trailing comment (v7.0.1 and v7.0.0). One caveat: `.github/workflows/pr-checkmate.yml` is generated by
+`npx pr-checkmate init`, so re-running that command drops the pins and they need re-applying.

@@ -68,9 +68,58 @@ only reaches GitHub once someone runs `npm run sync-schedule` and pushes the res
 Friday is deliberate, by the way: the portal rejects an end-time that has not happened yet, so a Thursday
 run would leave Thursday itself unreported.
 
+## Reports in Telegram
+
+Optional, and worth the five minutes: every run can post what it did to a Telegram channel — the days it
+filled, the ones it could not, and a link to the log. Without it you check the **Actions** tab yourself;
+with it, a run that fails at 00:30 on a Friday tells you so.
+
+**1. Make a bot.** Write to [@BotFather](https://t.me/BotFather), send `/newbot`, answer his two
+questions. He replies with a long token that looks like `123456789:AAE…`.
+
+**2. Let the bot into your channel.** Channel → **Manage** → **Administrators** →
+**Add Administrator** → search for the bot by the username BotFather gave it. Posting messages is the
+only permission it needs.
+
+**3. Find the channel's id.** Post any message in the channel, then open this in a browser, with your
+own token in place of `<TOKEN>`:
+
+```text
+https://api.telegram.org/bot<TOKEN>/getUpdates
+```
+
+Look for `"chat":{"id":-100…` and copy that number, minus sign and all.
+
+**4. Add them as secrets**, exactly like the login in step 2 of the setup:
+
+| Name               | Value                                 |
+| :----------------- | :------------------------------------ |
+| `BOT_TOKEN`        | the token BotFather gave you          |
+| `TELEGRAM_CHAT_ID` | the `-100…` number from the last step |
+
+Both must be there. With one missing, the run just stays quiet.
+
+From then on each run posts one message:
+
+```text
+⚠️ Attendance partly filled
+
+Filled 10 days: 2, 3, 4, 5, 6, 9, 19, 20, 23, 24
+
+Skipped 2 days:
+• 30: stayed unreported — the portal accepted the entry and dropped it (month closed for reporting?)
+• 25: locator.click: Timeout 30000ms exceeded.
+
+5m 27s · run #42
+```
+
+`run #42` links to the full log. A run that dies before it can report anything — a broken portal, a
+GitHub hiccup — sends a short "run failed" message instead, with the same link.
+
 ## When something goes wrong
 
-Open the failed run under **Actions** and read the last lines of the log.
+Open the failed run under **Actions** — the link in the Telegram report goes straight there — and read
+the last lines of the log.
 
 | What you see                  | What it means                                                                                                        |
 | :---------------------------- | :------------------------------------------------------------------------------------------------------------------- |

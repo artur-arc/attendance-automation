@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { logger } from '../utils';
 
 /** One healed selector, remembered across runs. */
-export interface CachedSelector {
+interface CachedSelector {
   /** The Playwright selector that was found to work. */
   selector: string;
   /** ISO timestamp of when it was healed. */

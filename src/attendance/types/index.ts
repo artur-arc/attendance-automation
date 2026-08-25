@@ -4,17 +4,12 @@ export interface AttendanceRecord {
   remarks?: string;
 }
 
-export interface DayInfo {
-  date: string;
-  dayType: string; // e.g., "Day0", "Day3", etc.
-  status: 'pink' | 'green' | 'other';
-  isToday: boolean;
-}
-
 export interface AutomationResult {
   successCount: number;
   skippedCount: number;
   errors: string[];
+  /** Dates that were actually saved, in the order they were reported. */
+  filled: string[];
 }
 
 /** A month the calendar can be on. `month` is 1-based, like a human reads it. */

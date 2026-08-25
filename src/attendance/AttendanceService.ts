@@ -2,7 +2,8 @@ import { Page } from '@playwright/test';
 import { logger } from '../utils';
 import config from './attendance.json';
 import { AttendancePage, LoginPage } from './pages';
-import { AutomationResult, week, place } from './types';
+import { placeFor } from './schedule';
+import { AutomationResult, place } from './types';
 
 /**
  *
@@ -27,6 +28,7 @@ export class AttendanceService {
       successCount: 0,
       skippedCount: 0,
       errors: [],
+      filled: [],
     };
 
     try {
@@ -94,12 +96,7 @@ export class AttendanceService {
       const dateStr = await this.attendancePage.getDayDate(day);
       const dayType = await this.attendancePage.getDayType(day);
 
-      const dayName = (Object.entries(week) as [keyof typeof week, string][]).find(
-        ([, code]) => code === dayType,
-      )?.[0];
-      const dayPlace = dayName
-        ? config.schedule[dayName as keyof typeof config.schedule]
-        : place.home;
+      const dayPlace = placeFor(dayType);
 
       if (dayPlace === place.off) {
         logger.log(`--- SKIP: Day ${dateStr} is off.`);
@@ -123,12 +120,13 @@ export class AttendanceService {
         if (success) {
           logger.log(`--- OK: Day ${dateStr} saved.`);
           result.successCount++;
+          result.filled.push(dateStr);
         } else {
           // The portal takes the form, closes the modal and reports nothing
           // when the month is closed for reporting — verified on 29 June 2026
           // with a fully initialised modal and a typed-in, accepted entry.
           throw new Error(
-            `${dateStr} stayed unreported — the portal accepted the entry and dropped it (month closed for reporting?)`,
+            'stayed unreported — the portal accepted the entry and dropped it (month closed for reporting?)',
           );
         }
         await this.page.waitForTimeout(500);

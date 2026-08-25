@@ -9,18 +9,14 @@
  */
 import 'dotenv/config';
 import { runAutomation } from '../core/AutomationRunner';
-import { logger } from '../utils';
+import { logger, requireCredentials } from '../utils';
 import config from './attendance.json';
 import { AttendancePage, LoginPage } from './pages';
-import { week, place } from './types';
+import { dayNameFor, placeFor } from './schedule';
+import { place } from './types';
 
 void (async (): Promise<void> => {
-  const username = process.env.ATTENDANCE_LOGIN_USERNAME;
-  const password = process.env.ATTENDANCE_LOGIN_PASSWORD;
-  if (!username || !password) {
-    logger.error('Missing ATTENDANCE_LOGIN_USERNAME or ATTENDANCE_LOGIN_PASSWORD in .env');
-    process.exit(1);
-  }
+  const { username, password } = requireCredentials();
 
   await runAutomation(async page => {
     await page.goto(config.baseUrl);
@@ -39,10 +35,8 @@ void (async (): Promise<void> => {
       for (const day of days) {
         const date = await attendancePage.getDayDate(day);
         const dayType = await attendancePage.getDayType(day);
-        const dayName = (Object.entries(week) as [keyof typeof week, string][]).find(
-          ([, code]) => code === dayType,
-        )?.[0];
-        const dayPlace = dayName ? config.schedule[dayName] : place.home;
+        const dayName = dayNameFor(dayType);
+        const dayPlace = placeFor(dayType);
         const action =
           dayPlace === place.off
             ? 'SKIP (off)'

@@ -9,13 +9,13 @@
   "scripts": {
     "attendance": "tsx src/attendance/run.ts",
     "attendance:dry": "tsx src/attendance/dry-run.ts",
+    "telegram:chat-id": "tsx src/utils/telegram-chat-id.ts",
     "sync-schedule": "tsx src/utils/sync-schedule.ts src/attendance/attendance.json .github/workflows/attendance.yml",
     "typecheck": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@playwright/test": "1.62.1",
-    "playwright": "1.62.1"
+    "@playwright/test": "1.62.1"
   },
   "devDependencies": {
     "@types/node": "^26.1.0",

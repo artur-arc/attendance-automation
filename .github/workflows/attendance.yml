@@ -9,9 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.62.1-jammy # Must match the playwright version in package.json
+    env:
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '20'
       - run: npm ci
@@ -19,3 +22,31 @@ jobs:
         env:
           ATTENDANCE_LOGIN_USERNAME: ${{ secrets.ATTENDANCE_LOGIN_USERNAME }}
           ATTENDANCE_LOGIN_PASSWORD: ${{ secrets.ATTENDANCE_LOGIN_PASSWORD }}
+
+      # The run reports itself, including its own crashes. This covers only the
+      # failures it can never report — a container that will not start, a
+      # cancelled or timed-out job — where silence looks exactly like a run that
+      # never happened. The marker file the script leaves behind on a delivered
+      # report keeps this from sending a second one.
+      - name: Report an unreported failure
+        if: failure()
+        run: |
+          set -eu
+          if [ -f .telegram-notified ]; then
+            echo 'The run already reported itself.'
+            exit 0
+          fi
+          if [ -z "${BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+            echo 'No Telegram credentials — nothing to report to.'
+            exit 0
+          fi
+          RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          TEXT=$(printf '%s\n%s\n%s' \
+            "❌ <b>Attendance run failed</b>" \
+            "The job stopped before the script could report anything." \
+            "<a href=\"$RUN_URL\">run #$GITHUB_RUN_NUMBER</a>")
+          curl -sS -o /dev/null \
+            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+            --data-urlencode "parse_mode=HTML" \
+            --data-urlencode "text=$TEXT" \
+            "https://api.telegram.org/bot$BOT_TOKEN/sendMessage"

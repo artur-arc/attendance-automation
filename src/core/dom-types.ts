@@ -8,7 +8,7 @@
  *
  * Shared here so `evaluate` blocks across the codebase don't each redeclare them.
  */
-export interface DomElement {
+interface DomElement {
   tagName: string;
   textContent: string | null;
   children: { length: number };
@@ -16,15 +16,8 @@ export interface DomElement {
   querySelectorAll(selector: string): DomNodeList;
 }
 
-export type DomNodeList = ArrayLike<DomElement> & { forEach(cb: (el: DomElement) => void): void };
+type DomNodeList = ArrayLike<DomElement> & { forEach(cb: (el: DomElement) => void): void };
 
 export interface DomDocument {
   querySelectorAll(selector: string): DomNodeList;
 }
-
-/** The subset of CSSStyleDeclaration our evaluate blocks read. */
-export type GetComputedStyle = (el: DomElement) => {
-  color: string;
-  display: string;
-  visibility: string;
-};

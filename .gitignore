@@ -79,6 +79,9 @@ Thumbs.db
 /.env.backup
 /.env
 
+# Marker the run leaves behind after a delivered Telegram report
+.telegram-notified
+
 # Coverage
 /coverage
 /version_check_report.txt

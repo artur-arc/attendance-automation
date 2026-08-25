@@ -18,7 +18,7 @@ const MODAL_READY_POLL_MS = 250;
  * portal renders a language we have no aliases for — callers then fall back to
  * "the label changed" instead of an exact check.
  */
-export function parseMonthLabel(label: string): CalendarMonth | null {
+function parseMonthLabel(label: string): CalendarMonth | null {
   const year = /(19|20)\d{2}/.exec(label)?.[0];
   if (!year) return null;
 
