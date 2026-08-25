@@ -1,354 +1,79 @@
-name: PR Checkmate Quality Checks
+name: PR CheckMate
+
+# The container variant, scaffolded because this repository does not carry
+# pr-checkmate as a dependency.
+#
+# The alternative would be `npx pr-checkmate`, and with no node_modules to reuse
+# that resolves to whatever is newest on the registry and downloads it again on
+# every job: 547 MB and about five minutes, measured. Worse, a major release
+# would land on you without a line changing here — and a major release of a gate
+# can start failing builds that passed yesterday.
+#
+# The image is pulled once and cached by the runner, and the tag below pins the
+# major so nothing moves under you.
 
 on:
   pull_request:
     branches: [main, master, develop]
     types: [opened, synchronize, reopened]
 
+# Least privilege. `pull-requests: write` is what lets the run upsert its summary
+# comment on the PR; drop it and the checks still run, they just report to the log.
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
+# Push three times in a minute and the first two runs become answers to questions
+# nobody is asking any more — they still hold a runner, and they still race to
+# upsert the summary comment, so a stale verdict can land on top of a fresh one.
+# Keyed per PR, so runs on different pull requests never cancel each other.
+concurrency:
+  group: pr-checkmate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  pr-checkmate-all:
-    name: PR Checkmate All Checks
+  pr-checkmate:
+    name: PR CheckMate
     runs-on: ubuntu-latest
+    # A hung step otherwise runs to GitHub's six-hour default before anyone hears
+    # about it. Every check has its own internal timeout; this is the backstop.
+    timeout-minutes: 20
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          ref: ${{ github.head_ref }}
+          # Required, not optional. Without the full history the PR base commit is
+          # not in the clone, no diff range can be built, and every diff-based
+          # check skips itself. The run then says `Scan Scope: … set
+          # fetch-depth: 0`, which is this line.
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run PR Checkmate All Checks
-        run: npx pr-checkmate all
-        continue-on-error: true
-
-      - name: Auto-commit formatting changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if ! git diff --cached --quiet; then
-            git commit -m "style: auto-format code with Prettier"
-            git push origin "HEAD:refs/heads/$HEAD_REF"
-            echo "Formatting changes committed and pushed"
-          else
-            echo "No formatting changes needed"
-          fi
+      # One job runs the whole registry. Which checks run is decided in
+      # pr-checkmate.json (`severity`), not by splitting this into jobs.
+      #
+      # `--user` is not a detail: without it every file a formatter rewrites comes
+      # back owned by root, and the next step in your pipeline fails on
+      # permissions long after this one reported success.
+      #
+      # The environment variables are passed through by name rather than by value:
+      # the run reads them to find the PR, and interpolating them into the command
+      # line would put their contents into a shell.
+      - name: Run PR CheckMate
         env:
+          # Not injected automatically: without this the run cannot authenticate,
+          # and the summary comment silently never reaches the PR.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_REF: ${{ github.head_ref }}
-
-  lint:
-    name: ESLint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        run: npx pr-checkmate lint
-        continue-on-error: true
-
-  prettier:
-    name: Prettier
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Prettier
-        run: npx pr-checkmate prettier
-        continue-on-error: true
-
-  spellcheck:
-    name: Spellcheck
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Spellcheck
-        run: npx pr-checkmate spellcheck
-        continue-on-error: true
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Security Scan
-        run: npx pr-checkmate security
-        continue-on-error: true
-
-  dependency-check:
-    name: Dependency Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Dependency Check
-        run: npx pr-checkmate dependencies
-        continue-on-error: true
-
-  circular-deps:
-    name: Circular Dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Circular Dependency Check
-        run: npx pr-checkmate circular
-        continue-on-error: true
-
-  license-check:
-    name: License Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run License Check
-        run: npx pr-checkmate license
-        continue-on-error: true
-
-  pr-size:
-    name: PR Size
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check PR Size
-        run: npx pr-checkmate pr-size
-        continue-on-error: true
-
-  pr-title:
-    name: PR Title
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check PR Title
-        run: npx pr-checkmate pr-title
-        continue-on-error: true
-
-  outdated-deps:
-    name: Outdated Dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check Outdated Dependencies
-        run: npx pr-checkmate outdated
-        continue-on-error: true
-
-  markdown-lint:
-    name: Markdown Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Markdown Lint
-        run: npx pr-checkmate markdown
-        continue-on-error: true
-
-  typecheck:
-    name: TypeScript Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run TypeScript Type Check
-        run: npx pr-checkmate typecheck
-        continue-on-error: true
-
-  diff-smell:
-    name: Diff Code Smell
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Scan Diff for Code Smells
-        run: npx pr-checkmate diff-smell
-        continue-on-error: true
-
-  pr-body:
-    name: PR Description
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check PR Description
-        run: npx pr-checkmate pr-body
-        continue-on-error: true
-
-  duplicate-check:
-    name: Duplicate Code
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check for Duplicate Code
-        run: npx pr-checkmate duplicate
-        continue-on-error: true
+        run: |
+          docker run --rm \
+            -v "$PWD:/repo" \
+            --user "$(id -u):$(id -g)" \
+            -e GITHUB_TOKEN \
+            -e GITHUB_REPOSITORY \
+            -e GITHUB_EVENT_NAME \
+            -e GITHUB_EVENT_PATH \
+            -e GITHUB_REF \
+            -e GITHUB_SHA \
+            -e CI \
+            -v "$GITHUB_EVENT_PATH:$GITHUB_EVENT_PATH:ro" \
+            ghcr.io/mybono/pr-checkmate:3 all

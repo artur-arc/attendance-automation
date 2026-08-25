@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/pr-checkmate/pr-checkmate.schema.json",
+  "// how-to": "Only what differs from the defaults belongs here — everything else is implicit and stays current on upgrade, so this file stays short. Turn a check off:      \"severity\": { \"Spellcheck\": \"off\" } Make one advisory:     \"severity\": { \"Sensitive Files\": \"warn\" } Make everything advisory while adopting: \"severityDefaults\": { \"failOn\": \"warn\" } Skip a file or folder: \"excludePaths\": [\"src/generated/**\", \"vendor/legacy.ts\"] Check names are the ones printed in the report. Every option, annotated, with its default: https://github.com/Mybono/pr_checkmate_public/blob/main/pr-checkmate.json Docs: https://github.com/Mybono/pr_checkmate_public/tree/main/documentation",
   "commands": {
     "npx pr-checkmate init": "Update pr-checkmate.json",
     "npx pr-checkmate all": "Run all checks (the PR diff in CI, every tracked file locally)",
@@ -83,7 +84,12 @@
   ],
   "eslint": {
     "rules": {
-      "max-len": ["warn", { "code": 200 }]
+      "max-len": [
+        "warn",
+        {
+          "code": 200
+        }
+      ]
     },
     "ignorePatterns": []
   },
@@ -227,5 +233,5 @@
     "prettier": "https://prettier.io/docs/en/options.html",
     "cspell": "https://cspell.org/configuration/"
   },
-  "languages": ["typescript", "javascript"]
+  "languages": ["typescript"]
 }
