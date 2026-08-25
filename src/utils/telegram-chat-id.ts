@@ -37,7 +37,10 @@ void (async (): Promise<void> => {
     process.exit(1);
   }
 
-  const response = await fetch(`https://api.telegram.org/bot${token}/getUpdates?limit=100`);
+  // A negative offset asks for the *last* n updates. Without it the queue is
+  // served oldest-first, and a busy bot's newest chats — the one just added,
+  // which is the whole point of this script — sit past the end of the page.
+  const response = await fetch(`https://api.telegram.org/bot${token}/getUpdates?offset=-100`);
   const body = (await response.json()) as { ok: boolean; description?: string; result?: Update[] };
 
   if (!body.ok) {

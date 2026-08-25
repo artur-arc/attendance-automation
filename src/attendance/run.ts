@@ -6,8 +6,6 @@ import config from './attendance.json';
 import { AttendanceService } from './AttendanceService';
 import { buildFailureReport, buildRunReport } from './report';
 
-const startedAt = Date.now();
-
 /**
  * Left behind once a report has gone out, so the workflow's `if: failure()`
  * fallback knows not to send a second one. Its only job is to cover failures
@@ -52,12 +50,12 @@ void (async (): Promise<void> => {
 
   // Reported after the browser is gone: a slow Telegram call should not hold a
   // browser session open, and by this point the outcome cannot change.
-  await report(buildRunReport(result, { durationMs: Date.now() - startedAt }));
+  await report(buildRunReport(result));
 })().catch(async (e: unknown) => {
   const message = e instanceof Error ? e.message : String(e);
 
   logger.error(`[runAutomation]: Critical script error: ${message}`);
-  await report(buildFailureReport(message, { durationMs: Date.now() - startedAt }));
+  await report(buildFailureReport(message));
 
   process.exit(1);
 });

@@ -3,7 +3,7 @@ import { logger } from '../utils';
 import config from './attendance.json';
 import { AttendancePage, LoginPage } from './pages';
 import { placeFor } from './schedule';
-import { AutomationResult, place } from './types';
+import { AutomationResult, formatMonth, place } from './types';
 
 /**
  *
@@ -92,6 +92,12 @@ export class AttendanceService {
     const pinkDays = await this.attendancePage.findPinkDays();
     logger.log(`--- Found ${pinkDays.length} pink days.`);
 
+    // Read once, up front: every day filled below belongs to this month, and
+    // the report is unreadable without it — "filled 2, 3, 30" says nothing.
+    const month = await this.attendancePage.getMonth();
+    const monthName = formatMonth(month);
+    const filled: string[] = [];
+
     for (const day of pinkDays) {
       const dateStr = await this.attendancePage.getDayDate(day);
       const dayType = await this.attendancePage.getDayType(day);
@@ -120,7 +126,7 @@ export class AttendanceService {
         if (success) {
           logger.log(`--- OK: Day ${dateStr} saved.`);
           result.successCount++;
-          result.filled.push(dateStr);
+          filled.push(dateStr);
         } else {
           // The portal takes the form, closes the modal and reports nothing
           // when the month is closed for reporting — verified on 29 June 2026
@@ -134,10 +140,12 @@ export class AttendanceService {
         const message = e instanceof Error ? e.message : String(e);
         logger.warn(`--- SKIP: Day ${dateStr} failed: ${message}`);
         result.skippedCount++;
-        result.errors.push(`${dateStr}: ${message}`);
+        result.errors.push(`${monthName ? `${dateStr} ${monthName}` : dateStr}: ${message}`);
         await this.attendancePage.cancelAttendance();
         await this.page.waitForTimeout(500);
       }
     }
+
+    if (filled.length > 0) result.filled.push({ month, days: filled });
   }
 }

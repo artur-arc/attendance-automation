@@ -104,17 +104,22 @@ From then on each run posts one message:
 ```text
 ⚠️ Attendance partly filled
 
-Filled 10 days: 2, 3, 4, 5, 6, 9, 19, 20, 23, 24
+Filled 11 days:
+• July 2026: 29
+• August 2026: 2, 3, 4, 5, 6, 9, 19, 20, 23, 24
 
 Skipped 2 days:
-• 30: stayed unreported — the portal accepted the entry and dropped it (month closed for reporting?)
-• 25: locator.click: Timeout 30000ms exceeded.
-
-5m 27s · run #42
+• 30 July 2026: stayed unreported — the portal accepted the entry and dropped it (month closed for reporting?)
+• 25 August 2026: locator.click: Timeout 30000ms exceeded.
+links:
+· attendance-portal
+· your-name/attendance-automation #42
 ```
 
-`run #42` links to the full log. A run that dies before it can report anything — a broken portal, a
-GitHub hiccup — sends a short "run failed" message instead, with the same link.
+`attendance-portal` opens the portal, so you can check the filled days yourself. The line under it opens
+the full log, and names the copy of the project that sent the report — one channel can collect reports
+from several forks. A run that dies before it can report anything — a broken portal, a GitHub hiccup —
+sends a short "run failed" message instead, with the log link and nothing else.
 
 ## When something goes wrong
 

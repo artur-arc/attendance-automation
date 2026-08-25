@@ -103,6 +103,11 @@ export class AttendancePage extends BasePage {
     }
   }
 
+  /** The month the calendar is on, or `null` when the header can't be read. */
+  async getMonth(): Promise<CalendarMonth | null> {
+    return parseMonthLabel(await this.getMonthLabel());
+  }
+
   /** Step the calendar one month back. False if it didn't move. */
   previousMonth(): Promise<boolean> {
     return this.stepMonth(this.prevMonthButton, -1);

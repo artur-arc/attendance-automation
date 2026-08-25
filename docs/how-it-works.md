@@ -123,6 +123,22 @@ about: it can fail without failing the run. No token, no chat id, a Telegram out
 channel — all of it is a warning in the log and nothing more. A reporting layer that can break the thing it
 reports on is worse than no reporting.
 
+Filled days are grouped by month rather than listed flat, because a sweep crosses months: "filled 29, 2,
+3" cannot say that the 29th was June and the rest July, and that is exactly the case the backwards sweep
+exists for. `AutomationResult.filled` therefore holds one `FilledMonth` per month, in the order the sweep
+visited them, and a skipped day carries its month in the error string for the same reason.
+
+A finished run also links the portal itself, as a short `attendance-portal` label — the raw URL is long
+enough to bury the rest of the footer — and takes the address from `attendance.json`, so the report and
+the run cannot point at different portals. A crashed run leaves it out: nothing was changed there, and the
+only link worth following is the log.
+
+The link to the run is built from `GITHUB_SERVER_URL`, `GITHUB_REPOSITORY`, `GITHUB_RUN_ID` and
+`GITHUB_RUN_NUMBER` — all of them the runner's own values, so a fork links to its own runs on its own host
+with nothing to change. The link text names the repository too: one channel can collect reports from
+several forks, and the first question about a report is which copy sent it. No GitHub variables means a
+local run, and the footer says so instead of linking nowhere.
+
 Two details are not cosmetic. Any error text is escaped before it reaches Telegram's HTML parse mode, and a
 message over 4096 characters is trimmed on a line boundary — a cut through a tag comes back as
 "can't parse entities", which loses the whole report over its tail. And nothing coming out of a failed

@@ -41,10 +41,11 @@ jobs:
             exit 0
           fi
           RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          TEXT=$(printf '%s\n%s\n%s' \
+          TEXT=$(printf '%s\n%s\n%s\n%s' \
             "❌ <b>Attendance run failed</b>" \
             "The job stopped before the script could report anything." \
-            "<a href=\"$RUN_URL\">run #$GITHUB_RUN_NUMBER</a>")
+            "links:" \
+            "· <a href=\"$RUN_URL\">$GITHUB_REPOSITORY #$GITHUB_RUN_NUMBER</a>")
           curl -sS -o /dev/null \
             --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
             --data-urlencode "parse_mode=HTML" \

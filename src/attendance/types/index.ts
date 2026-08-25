@@ -8,8 +8,21 @@ export interface AutomationResult {
   successCount: number;
   skippedCount: number;
   errors: string[];
-  /** Dates that were actually saved, in the order they were reported. */
-  filled: string[];
+  /** Days saved, grouped by the month they were reported into. */
+  filled: FilledMonth[];
+}
+
+/**
+ * The days saved in one month.
+ *
+ * Grouped rather than flat because a sweep spans months, and a bare list of
+ * dates ("2, 3, 30") cannot say which month each belongs to — the one thing
+ * you need when a run fills the tail of one month and the start of the next.
+ */
+export interface FilledMonth {
+  /** `null` when the calendar header could not be read. */
+  month: CalendarMonth | null;
+  days: string[];
 }
 
 /** A month the calendar can be on. `month` is 1-based, like a human reads it. */
@@ -55,6 +68,15 @@ export const monthAliases: readonly (readonly string[])[] = [
   ['November', 'נובמבר'],
   ['December', 'דצמבר'],
 ];
+
+/** «July 2026», or `''` when the header could not be parsed. */
+export function formatMonth(month: CalendarMonth | null): string {
+  if (!month) return '';
+
+  const [name] = monthAliases[month.month - 1];
+
+  return `${name} ${month.year}`;
+}
 
 export const place = {
   office: 'office',
